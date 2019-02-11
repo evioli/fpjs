@@ -2,12 +2,12 @@
 
 ## Data Model
 
-Example Model/Shape: 
+Example Model/Shape:
 
 ```javascript
 meal = {
   id: 1,
-  description: 'Breakfast', 
+  description: 'Breakfast',
   calories: 460
 }
 model = {
@@ -31,4 +31,13 @@ view
     mealsBody
       mealRow
         cell
-      totalRow 
+      totalRow
+
+## Update
+click add meal
+meal input
+calorie input
+click save (add / update)
+click edit
+click delete
+click cancel (?)
