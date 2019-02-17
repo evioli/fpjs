@@ -6,9 +6,26 @@ import {
   mealInputMsg,
   caloriesInputMsg,
   saveMealMsg,
+  deleteMealMsg,
+  editMealMsg,
 } from './Update';
 
-const { pre, div, h1, button, form, label, input, tr, td, th, tbody, thead, table } = hh(h);
+const {
+  pre,
+  div,
+  h1,
+  button,
+  form,
+  label,
+  input,
+  tr,
+  td,
+  th,
+  tbody,
+  thead,
+  table,
+  i
+ } = hh(h);
 
 function fieldSet(labelText, inputValue, oninput) {
   return div([
@@ -78,7 +95,7 @@ const tableHeader = thead([
   tr([
     cell(th, 'pa2 tl', 'Meal'),
     cell(th, 'pa2 tr', 'Calories'),
-    cell(th, '', ''),
+    cell(th, '', '')
   ]),
 ]);
 
@@ -86,7 +103,16 @@ function mealRow(dispatch, className, meal) {
   return tr({ className }, [
     cell(td, 'pa2', meal.description),
     cell(td, 'pa2 tr', meal.calories),
-    cell(td, 'pa2 tr', []),
+    cell(td, 'pa2 tr', [
+      i({
+        className: 'ph1 fa fa-trash-o pointer',
+        onclick: () => dispatch(deleteMealMsg(meal.id))
+      }),
+      i({
+        className: 'ph1 fa fa-pencil-square-o pointer',
+        onclick: () => dispatch(editMealMsg(meal.id)),
+      })
+    ]),
   ]);
 }
 
@@ -125,7 +151,6 @@ function view(dispatch, model){
     h1({ className: 'f2 pv2 bb' }, 'Calorie Counter'),
     formView(dispatch, model),
     tableView(dispatch, model.meals),
-    pre(JSON.stringify(model, null, 2))
   ]);
 }
 
