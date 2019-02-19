@@ -11,39 +11,44 @@ const {
   input
 } = hh(h);
 
-function dropDown() {
-  return select('', [
-    option('', 'Fahrenheit'),
-    option('', 'Celsius'),
-    option('', 'Kelvin'),
-    //onchange:
-  ])
+const UNITS = ['Fahrenheit', 'Celsius', 'Kelvin'];
+
+function unitOptions(selectedUnit) {
+  return R.map(
+    unit => option({ value: unit, selected: selectedUnit === unit }, unit),
+    UNITS
+  )
 }
 
-function inputSet(className,inputValue, oninput) {
-  return div({
-    className: className
-  },
-  [
+function unitSection(dispatch, unit, value) {
+  return div({ className: 'w-50 ma1' }, [
     input({
-      className: 'pa2 input-reset bs w-100 mb2',
+      className: 'db w-100 mv2 pa2 input-reset ba',
       type: 'text',
-      value: inputValue,
-      oninput: oninput,
+      value,
     }),
-    dropDown()
+    select(
+      {
+        className: 'db w-100 pa2 input-reset br1 bg-white ba b--black',
+      },
+      unitOptions(unit),
+    ),
   ]);
 }
 
 function view(dispatch, model) {
   return div({ className: 'mw6 center' }, [
     h1({ className: 'f2 pv2 bb' }, 'Temperature Unit Converter'),
-    div([
-      inputSet('fl w-40 pa2', 0, null),
-      div({
-        className: 'fl w-20 pa2'
-      }, '='),
-      inputSet('fl w-40 pa2', 32, null)
+    div({ className: 'flex' }, [
+      unitSection(dispatch,
+        model.leftUnit,
+        model.leftValue,
+        ),
+        div({ className: 'pa2 tc'},'='),
+      unitSection(dispatch,
+        model.rightUnit,
+        model.rightValue,
+        ),
     ]),
     pre(JSON.stringify(model, null, 2)),
   ]);
