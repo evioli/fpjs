@@ -10,13 +10,32 @@ const {
   input
 } = hh(h);
 
-function fieldSet(dispatch, title, value, oninput)
+const round = places =>
+R.pipe(
+  num => num * Math.pow(10, places),
+  Math.round,
+  num => num * Math.pow(10, -1 * places),
+);
+
+
+const formatMoney = R.curry(
+  (symbol, places, number ) => {
+    return R.pipe(
+      R.defaultTo(0),
+      round(places),
+      num => num.toFixed(places),
+      R.concat(symbol),
+    )(number);
+  }
+);
+
+function inputSet( title, value, oninput)
 {
   return div({ className: 'w-100 ma1' }, [
     div(title),
     input({
       className: 'w-100 pa2 input-reset',
-      type: 'number',
+      type: 'text',
       value,
       oninput: oninput
     }),
@@ -31,18 +50,20 @@ function labelSet(title, value)
       },
       title),
       div(
-        '$' + [value]
+        value
       ),
   ]);
 }
 
 function view(dispatch, model) {
+  const toMoney = formatMoney('$', 2);
+
   return div({ className: 'mw6 center' }, [
     h1({ className: 'f2 pv2 bb' }, 'Tip Calculator'),
-    fieldSet(dispatch, 'Bill Amount', model.billAmount, e => dispatch(updateAmount(e.target.value))),
-    fieldSet(dispatch, 'Tip %', model.tipPercent, e => dispatch(updateTip(e.target.value))),
-    labelSet('Tip:', model.tipAmount),
-    labelSet('Total', model.total),
+    inputSet('Bill Amount', model.billAmount, e => dispatch(updateAmount(e.target.value))),
+    inputSet('Tip %', model.tipPercent, e => dispatch(updateTip(e.target.value))),
+    labelSet('Tip:', toMoney(model.tipAmount)),
+    labelSet('Total', toMoney(model.total)),
     pre(JSON.stringify(model, null, 2)),
   ]);
 }

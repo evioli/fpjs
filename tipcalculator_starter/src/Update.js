@@ -19,28 +19,29 @@ export function updateTip(tipPercent) {
   };
 }
 
+
+function calcTipAndTotal(billAmount, tipPercent) {
+  const bill = parseFloat(billAmount);
+  const tip = bill * parseFloat(tipPercent) / 100 || 0;
+  return [tip, bill + tip];
+}
+
 function update (msg, model) {
   switch(msg.type) {
     case MSGS.AMOUNT: {
       const { billAmount } = msg;
-      const parsedBillAmount = parseFloat(billAmount);
-      const tipAmount = round(parsedBillAmount) * (round(parseFloat(model.tipPercent)) / 100);
-      const total = round(parsedBillAmount + tipAmount);
-      return { ...model, billAmount: parsedBillAmount, tipAmount, total }
+      const [tipAmount, total] = calcTipAndTotal(billAmount, model.tipPercent);
+
+      return { ...model, billAmount, tipAmount, total }
     }
     case MSGS.TIP: {
       const { tipPercent } = msg;
-      const parsedTipPercent = parseFloat(tipPercent);
-      const tipAmount = round(parseFloat(model.billAmount)) * (round(parsedTipPercent) / 100);
-      const total = round(parseFloat(model.billAmount) + tipAmount);
-      return { ...model, tipPercent: parsedTipPercent, tipAmount, total }
+      const [tipAmount, total] = calcTipAndTotal(model.billAmount, tipPercent);
+
+      return { ...model, tipPercent, tipAmount, total }
     }
   }
   return model;
-}
-
-function round(number) {
-  return Math.round(number * 10) / 10;
 }
 
 export default update;
