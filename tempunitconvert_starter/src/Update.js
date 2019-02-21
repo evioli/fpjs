@@ -43,17 +43,11 @@ function update (msg, model) {
       }
 
       const leftValue = R.pipe(
-        parseFloat,
-        R.defaultTo(''),
-      )(msg.leftValue);
+        parseInt,
+        R.defaultTo('')
+        )(msg.leftValue);
 
-      if(model.leftUnit === model.rightUnit){
-        return { ...model, sourceLeft: true, leftValue, rightValue: leftValue };
-      }
-
-      const rightValue = convertTemp(model);
-
-      return { ...model, sourceLeft: true, leftValue, rightValue };
+      return convert({ ...model, sourceLeft: true, leftValue });
     }
     case MSGS.RIGHT_VALUE: {
       if(msg.rightValue === '') {
@@ -61,124 +55,64 @@ function update (msg, model) {
       }
       const rightValue = R.pipe(
         parseInt,
-        R.defaultTo(''),
-      )(msg.rightValue);
+        R.defaultTo('')
+        )(msg.rightValue);
 
-      if(model.leftUnit === model.rightUnit)
-      {
-        return { ...model, sourceLeft: false, leftValue: rightValue, rightValue }
-      }
-
-      const leftValue = convertTemp(model);
-
-      return { ...model, sourceLeft: false, leftValue, rightValue }
+      return convert({ ...model, sourceLeft: false, rightValue });
     }
     case MSGS.LEFT_UNIT: {
       const { leftUnit } = msg;
-      return { ...model, leftUnit }
+      return convert({ ...model, leftUnit });
     }
     case MSGS.RIGHT_UNIT: {
       const { rightUnit } = msg;
-      return { ...model, rightUnit }
+      return convert({ ...model, rightUnit });
     }
   }
   return model;
 }
 
-function convertTemp(model)
-{
-  if(model.sourceLeft) {
-    switch(model.leftUnit)
-    {
-      case 'Fahrenheit': {
-        switch(model.rightUnit) {
-          case 'Celsius': {
-            return fahrenheitToCelsius(model.leftValue);
-          }
-          case 'Kelvin': {
-            return R.pipe(fahrenheitToCelsius(model.leftValue), celsiusToKelvin());
-          }
-        }
-      }
-
-      case 'Celsius': {
-        switch(model.rightUnit)
-        {
-          case 'Fahrenheit': {
-            return celsiusToFahernheit(model.leftValue);
-          }
-          case 'Kelvin': {
-            return celsiusToKelvin(model.leftValue);
-          }
-        }
-      }
-
-      case 'Kelvin': {
-        switch(model.rightUnit) {
-          case 'Fahrenheit': {
-            return R.pipe(kelvinToCelsius(model.leftValue), celsiusToFahernheit());
-          }
-          case 'Celsius': {
-            return kelvinToCelsius(model.leftValue);
-          }
-        }
-      }
-    }
-    return model.leftValue;
-  }
-  else{
-    switch(model.rightUnit)
-    {
-      case 'Fahrenheit': {
-        switch(model.leftUnit) {
-          case 'Celsius': {
-            return fahrenheitToCelsius(model.rightValue);
-          }
-          case 'Kelvin': {
-            return R.pipe(fahrenheitToCelsius(model.rightValue), celsiusToKelvin());
-          }
-        }
-      }
-
-      case 'Celsius': {
-        switch(model.leftUnit)
-        {
-          case 'Fahrenheit': {
-            return celsiusToFahernheit(model.rightValue);
-          }
-          case 'Kelvin': {
-            return celsiusToKelvin(model.rightValue);
-          }
-        }
-      }
-
-      case 'Kelvin': {
-        switch(model.leftUnit) {
-          case 'Fahrenheit': {
-            return R.pipe(kelvinToCelsius(model.rightValue), celsiusToFahernheit());
-          }
-          case 'Celsius': {
-            return kelvinToCelsius(model.rightValue);
-          }
-        }
-      }
-    }
-    return model.rightValue;
-  }
+function round(number) {
+  return Math.round(number * 10) / 10;
 }
 
-const convertLeftFahrenheit = R.cond([
-  [R.equals('Celsius'), temp => fahrenheitToCelsius(temp) ],
-  [R.equals('Kelvin'), temp => R.pipe(fahrenheitToCelsius(temp), celsiusToKelvin())],
-  [R.T, temp => temp],
-]);
+function convert(model)
+{
+  const {leftValue, leftUnit, rightValue, rightUnit } = model;
+
+  const [fromUnit, fromTemp, toUnit] =
+  model.sourceLeft
+  ? [leftUnit, leftValue, rightUnit]
+  : [rightUnit, rightValue, leftUnit];
+
+  const otherValue = R.pipe(
+    convertFromToTemp,
+    round,
+  )(fromUnit, toUnit, fromTemp);
+
+  return model.sourceLeft
+  ? { ...model, rightValue: otherValue }
+  : { ...model, leftValue: otherValue };
+}
+
+function convertFromToTemp(fromUnit, toUnit, temp)
+{
+  const convertFn = R.pathOr(
+    R.identity,
+    [fromUnit, toUnit],
+    UnitConversions
+  );
+
+  return convertFn(temp);
+}
+
 
 function fahrenheitToCelsius(temperature){
-  return (5/9) * (temperature - 32.0);
+  return 5 / 9 * (temperature - 32.0);
 }
 
 function celsiusToFahernheit(temperature){
-  return (9/5) * temperature + 32.0;
+  return  9 / 5 * temperature + 32.0;
 }
 
 function kelvinToCelsius(temperature){
@@ -188,5 +122,23 @@ function kelvinToCelsius(temperature){
 function celsiusToKelvin(temperature){
   return temperature + 273.15;
 }
+
+const fahrenheitToKelvin = R.pipe(fahrenheitToCelsius, celsiusToKelvin);
+const kelvinToFahrenheit = R.pipe(kelvinToCelsius, celsiusToFahernheit);
+
+const UnitConversions = {
+  Celsius: {
+    Fahrenheit: celsiusToFahernheit,
+    Kelvin: celsiusToKelvin,
+  },
+  Fahrenheit: {
+    Celsius: fahrenheitToCelsius,
+    Kelvin: fahrenheitToKelvin,
+  },
+  Kelvin: {
+    Celsius: kelvinToCelsius,
+    Fahrenheit: kelvinToFahrenheit,
+  },
+};
 
 export default update;
