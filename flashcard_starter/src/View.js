@@ -65,7 +65,7 @@ function rankSet()
   ]);
 }
 
-function flashCard(dispatch)
+function flashCard(dispatch, model)
 {
   return div({
     className: 'w-third pa2'
@@ -75,8 +75,8 @@ function flashCard(dispatch)
       className: 'w-100 pa2 bg-light-yellow shadow-1 mv2 relative pb5'
     },
     [
-      labelSet('Question', 'Question text'),
-      labelSet('Answer', 'Answer text'),
+      labelSet('Question', model.question),
+      labelSet('Answer', model.answer),
       div({
         className: 'absolute bottom-0 left-0 w-100 ph2'
       },
@@ -98,7 +98,7 @@ function view(dispatch, model) {
       className: 'flex flex-wrap nl2 nr2'
     },
     [
-      flashCard(dispatch),
+      flashCard(dispatch, model.flashcards[0]),
     ]),
     pre(JSON.stringify(model, null, 2)),
   ]);

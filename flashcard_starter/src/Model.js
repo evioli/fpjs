@@ -1,8 +1,3 @@
-const initModel = {
-  flashcards: [],
-  nextId: 0,
-};
-
 const flashCard = {
   id: 0,
   question: 'Question?',
@@ -11,5 +6,12 @@ const flashCard = {
   rank: 0,
 
 }
+
+const initModel = {
+  flashcards: [flashCard],
+  nextId: 0,
+};
+
+
 
 export default initModel;
